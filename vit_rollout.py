@@ -44,13 +44,15 @@ def rollout(attentions, discard_ratio, head_fusion):
 class VITAttentionRollout:
     def __init__(self, model, attention_layer_name='attn_drop', head_fusion="mean",
         discard_ratio=0.9):
+        # attention_layer_name 'attn_drop' == MSA layer
         self.model = model
         self.head_fusion = head_fusion
         self.discard_ratio = discard_ratio
-        for name, module in self.model.named_modules():
-            if attention_layer_name in name:
-                module.register_forward_hook(self.get_attention)
-
+        print(attention_layer_name)
+        for name, module in self.model.named_modules(): 
+            if attention_layer_name in name: # 각 layer의 MSA layer에 대해
+                module.register_forward_hook(self.get_attention) # 매 layer마다 attention map을 추출하기 위하여 모듈 이름을 이용하여 attention map을 담음
+                # register_forward_hook : forward 실행 후에 self.get_attention 함수 삽입 (수행 X, 함수만 추가)
         self.attentions = []
 
     def get_attention(self, module, input, output):

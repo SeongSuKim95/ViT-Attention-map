@@ -11,7 +11,7 @@ from vit_grad_rollout import VITAttentionGradRollout
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use_cuda', action='store_true', default=False,
+    parser.add_argument('--use_cuda', action='store_true', default=True,
                         help='Use NVIDIA GPU acceleration')
     parser.add_argument('--image_path', type=str, default='./examples/both.png',
                         help='Input image path')
@@ -23,6 +23,7 @@ def get_args():
     parser.add_argument('--category_index', type=int, default=None,
                         help='The category index for gradient rollout')
     args = parser.parse_args()
+    
     args.use_cuda = args.use_cuda and torch.cuda.is_available()
     if args.use_cuda:
         print("Using GPU")
@@ -41,8 +42,7 @@ def show_mask_on_image(img, mask):
 
 if __name__ == '__main__':
     args = get_args()
-    model = torch.hub.load('facebookresearch/deit:main', 
-        'deit_tiny_patch16_224', pretrained=True)
+    model = torch.hub.load('facebookresearch/deit:main', 'deit_tiny_patch16_224', pretrained=True)
     model.eval()
 
     if args.use_cuda:
@@ -76,8 +76,8 @@ if __name__ == '__main__':
     np_img = np.array(img)[:, :, ::-1]
     mask = cv2.resize(mask, (np_img.shape[1], np_img.shape[0]))
     mask = show_mask_on_image(np_img, mask)
-    cv2.imshow("Input Image", np_img)
-    cv2.imshow(name, mask)
-    cv2.imwrite("input.png", np_img)
-    cv2.imwrite(name, mask)
+    # cv2.imshow("Input Image", np_img)
+    # cv2.imshow(name, mask)
+    # cv2.imwrite("input.png", np_img)
+    cv2.imwrite("./result/"+name, mask)
     cv2.waitKey(-1)
