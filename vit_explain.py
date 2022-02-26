@@ -11,7 +11,7 @@ from vit_grad_rollout import VITAttentionGradRollout
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use_cuda', action='store_true', default=True,
+    parser.add_argument('--use_cuda', action='store_true', default=False,
                         help='Use NVIDIA GPU acceleration')
     parser.add_argument('--image_path', type=str, default='./examples/both.png',
                         help='Input image path')
@@ -20,7 +20,7 @@ def get_args():
                         Can be mean/max/min')
     parser.add_argument('--discard_ratio', type=float, default=0.9,
                         help='How many of the lowest 14x14 attention paths should we discard')
-    parser.add_argument('--category_index', type=int, default=None,
+    parser.add_argument('--category_index', type=int, default=1,
                         help='The category index for gradient rollout')
     args = parser.parse_args()
     

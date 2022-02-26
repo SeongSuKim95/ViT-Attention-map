@@ -10,8 +10,8 @@ def grad_rollout(attentions, gradients, discard_ratio):
     result = torch.eye(attentions[0].size(-1))
     with torch.no_grad():
         for attention, grad in zip(attentions, gradients):                
-            weights = grad
-            attention_heads_fused = (attention*weights).mean(axis=1)
+            weights = grad # grad size [1,3,197,197], attention size [1,3,197,197]
+            attention_heads_fused = (attention*weights).mean(axis=1) # Element wise multiplication, [1,197,197]
             attention_heads_fused[attention_heads_fused < 0] = 0
 
             # Drop the lowest attentions, but
@@ -21,7 +21,7 @@ def grad_rollout(attentions, gradients, discard_ratio):
             #indices = indices[indices != 0]
             flat[0, indices] = 0
 
-            I = torch.eye(attention_heads_fused.size(-1))
+            I = torch.eye(attention_heads_fused.size(-1)) # same with attention roll out
             a = (attention_heads_fused + 1.0*I)/2
             a = a / a.sum(dim=-1)
             result = torch.matmul(a, result)
@@ -55,12 +55,18 @@ class VITAttentionGradRollout:
         self.attention_gradients.append(grad_input[0].cpu())
 
     def __call__(self, input_tensor, category_index):
-        self.model.zero_grad()
-        output = self.model(input_tensor)
+        #category_index : dog = 243, cat = 282
+        self.model.zero_grad() # gradient zero
+        output = self.model(input_tensor)  #output.size() = [1,#class]
         category_mask = torch.zeros(output.size())
-        category_mask[:, category_index] = 1
-        loss = (output*category_mask).sum()
-        loss.backward()
+        category_mask[:, category_index] = 1 # category_index = class index 
+        loss = (output*category_mask).sum() # 해당 class index에 대한 loss
+        loss.backward() # backward_hook으로 grad_input이 append 되는 형태
 
         return grad_rollout(self.attentions, self.attention_gradients,
             self.discard_ratio)
+
+# grad_rollout = VITAttentionGradRollout(model, discard_ratio=args.discard_ratio)
+# mask = grad_rollout(input_tensor, args.category_index)
+# name = "grad_rollout_{}_{:.3f}_{}.png".format(args.category_index,
+#     args.discard_ratio, args.head_fusion)
